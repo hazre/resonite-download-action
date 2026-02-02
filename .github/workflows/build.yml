@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Test Action
+        id: download
+        uses: ./
+        with:
+          steam-username: ${{ secrets.STEAM_USERNAME }}
+          steam-password: ${{ secrets.STEAM_PASSWORD }}
+          resonite-path: ./test-resonite
+          branch: public
+
+      - name: Display Results
+        env:
+          VERSION: ${{ steps.download.outputs.version }}
+          BUILD_ID: ${{ steps.download.outputs.build-id }}
+          MANIFEST_ID: ${{ steps.download.outputs.manifest-id }}
+          CACHE_HIT: ${{ steps.download.outputs.cache-hit }}
+        run: |
+          echo "Version: $VERSION"
+          echo "Build ID: $BUILD_ID"
+          echo "Manifest ID: $MANIFEST_ID"
+          echo "Cache Hit: $CACHE_HIT"
