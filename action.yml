@@ -1,0 +1,118 @@
+name: "Resonite Download Action"
+description: "Download Resonite using DepotDownloader with automatic caching"
+author: "hazre"
+branding:
+  icon: "download"
+  color: "purple"
+
+inputs:
+  steam-username:
+    description: "Steam username for authentication"
+    required: true
+  steam-password:
+    description: "Steam password for authentication"
+    required: true
+  steam-beta-password:
+    description: "Steam beta password (required for headless branch)"
+    required: false
+    default: ""
+  version:
+    description: "Specific Resonite version to download (optional, defaults to latest)"
+    required: false
+    default: ""
+  manifest-id:
+    description: "Specific manifest ID to download (optional)"
+    required: false
+    default: ""
+  resonite-path:
+    description: "Path to the directory where Resonite will be installed"
+    required: false
+    default: ${{ github.workspace }}/Resonite
+  branch:
+    description: "Branch of Resonite to use"
+    required: false
+    default: "public"
+
+outputs:
+  version:
+    description: "Version of Resonite that was downloaded"
+    value: ${{ steps.download.outputs.version || steps.resolve-version.outputs.version }}
+  build-id:
+    description: "Build ID (version without dots) for cache keys"
+    value: ${{ steps.download.outputs.build-id || steps.resolve-version.outputs.build-id }}
+  manifest-id:
+    description: "Manifest ID that was downloaded"
+    value: ${{ steps.download.outputs.manifest-id || steps.resolve-version.outputs.manifest-id }}
+  cache-hit:
+    description: "Whether the cache was hit"
+    value: ${{ steps.cache-resonite.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@baa11fbfe1d6520db94683bd5c7a3818018e4309 # v5.1.0
+      with:
+        dotnet-version: "10.0.x"
+
+    - name: Install ResoniteDownloader tool
+      shell: bash
+      run: dotnet tool install --global hazre.ResoniteDownloader
+
+    - name: Resolve version for cache key
+      id: resolve-version
+      shell: bash
+      run: |
+        ARGS="--branch ${{ inputs.branch }}"
+
+        if [ -n "${{ inputs.version }}" ]; then
+          ARGS="$ARGS --version ${{ inputs.version }}"
+        fi
+
+        if [ -n "${{ inputs.manifest-id }}" ]; then
+          ARGS="$ARGS --manifest-id ${{ inputs.manifest-id }} --steam-user ${{ inputs.steam-username }} --steam-pass ${{ inputs.steam-password }}"
+          if [ -n "${{ inputs.steam-beta-password }}" ]; then
+            ARGS="$ARGS --beta-pass ${{ inputs.steam-beta-password }}"
+          fi
+        fi
+
+        resonitedownloader resolve-version $ARGS
+
+    - name: Fetch cached Resonite
+      id: cache-resonite
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      with:
+        path: ${{ inputs.resonite-path }}
+        key: Resonite-${{ steps.resolve-version.outputs.build-id }}-${{ inputs.branch }}
+
+    - name: Create download directory
+      if: steps.cache-resonite.outputs.cache-hit != 'true'
+      shell: bash
+      run: mkdir -p "${{ inputs.resonite-path }}"
+
+    - name: Download Resonite
+      id: download
+      if: steps.cache-resonite.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        ARGS="--game-dir ${{ inputs.resonite-path }} --steam-user ${{ inputs.steam-username }} --steam-pass ${{ inputs.steam-password }} --branch ${{ inputs.branch }}"
+
+        if [ -n "${{ inputs.steam-beta-password }}" ]; then
+          ARGS="$ARGS --beta-pass ${{ inputs.steam-beta-password }}"
+        fi
+
+        if [ -n "${{ inputs.version }}" ]; then
+          ARGS="$ARGS --version ${{ inputs.version }}"
+        fi
+
+        if [ -n "${{ inputs.manifest-id }}" ]; then
+          ARGS="$ARGS --manifest-id ${{ inputs.manifest-id }}"
+        fi
+
+        resonitedownloader download $ARGS
+
+    - name: Output cache hit message
+      if: steps.cache-resonite.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        echo "Resonite ${{ steps.resolve-version.outputs.version }} restored from cache"
