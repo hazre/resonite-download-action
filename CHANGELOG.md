@@ -1,3 +1,9 @@
+## 1.0.1 (2026-02-09)
+
+### Fixes
+
+- pass steam credentials to resolve-version when available and pin ResoniteDownloader version
+
 ## 1.0.0 (2026-02-02)
 
 ### Notes
