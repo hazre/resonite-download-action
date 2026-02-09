@@ -61,7 +61,7 @@ runs:
 
     - name: Install ResoniteDownloader tool
       shell: bash
-      run: dotnet tool install --global hazre.ResoniteDownloader
+      run: dotnet tool install --global hazre.ResoniteDownloader@1.1.0
 
     - name: Resolve version for cache key
       id: resolve-version
@@ -69,15 +69,19 @@ runs:
       run: |
         ARGS="--branch ${{ inputs.branch }}"
 
+        if [ -n "${{ inputs.steam-username }}" ] && [ -n "${{ inputs.steam-password }}" ]; then
+          ARGS="$ARGS --steam-user ${{ inputs.steam-username }} --steam-pass ${{ inputs.steam-password }}"
+          if [ -n "${{ inputs.steam-beta-password }}" ]; then
+            ARGS="$ARGS --beta-pass ${{ inputs.steam-beta-password }}"
+          fi
+        fi
+
         if [ -n "${{ inputs.version }}" ]; then
           ARGS="$ARGS --version ${{ inputs.version }}"
         fi
 
         if [ -n "${{ inputs.manifest-id }}" ]; then
-          ARGS="$ARGS --manifest-id ${{ inputs.manifest-id }} --steam-user ${{ inputs.steam-username }} --steam-pass ${{ inputs.steam-password }}"
-          if [ -n "${{ inputs.steam-beta-password }}" ]; then
-            ARGS="$ARGS --beta-pass ${{ inputs.steam-beta-password }}"
-          fi
+          ARGS="$ARGS --manifest-id ${{ inputs.manifest-id }}"
         fi
 
         resonitedownloader resolve-version $ARGS
