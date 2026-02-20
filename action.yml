@@ -61,7 +61,7 @@ runs:
 
     - name: Install ResoniteDownloader tool
       shell: bash
-      run: dotnet tool install --global hazre.ResoniteDownloader@1.1.0
+      run: dotnet tool install --global hazre.ResoniteDownloader@1.1.1
 
     - name: Resolve version for cache key
       id: resolve-version
