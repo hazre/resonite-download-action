@@ -2,9 +2,7 @@
 
 ### Fixes
 
-- pass steam credentials to resolve-version when available and pin ResoniteDownloader version
-- update ResoniteDownloader to 1.1.1 (#6)
-- Update `hazre.ResoniteDownloader` to `1.1.1` to pick up the download success check fix that detects `Resonite.exe` instead of `Resonite.dll`.
+- update `hazre.ResoniteDownloader` to `1.1.1` to pick up the download success check fix that detects `Resonite.exe` instead of `Resonite.dll`.
 
 ## 1.0.1 (2026-02-09)
 
