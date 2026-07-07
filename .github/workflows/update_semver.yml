@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: "Update Tags"
-        uses: cssnr/update-version-tags-action@1ff20ac5555f024f5e72b7ccdf165b867878f953 # v2.0.0
+        uses: cssnr/update-version-tags-action@dc7077eaec04b8fd61f7b7e6d4830564cfd12382 # v2.1.1
         with:
           tag: ${{ inputs.tag || github.ref_name }}
           tags: latest
