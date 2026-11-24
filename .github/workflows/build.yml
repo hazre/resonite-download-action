@@ -19,8 +19,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # Secrets are unavailable on pull requests from forks and from Dependabot,
+      # so only run the real download when credentials are actually provided.
+      - name: Check for Steam credentials
+        id: creds
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+        run: |
+          if [ -n "$STEAM_USERNAME" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Steam credentials are not available for this run; the download test is skipped."
+          fi
+
       - name: Test Action
         id: download
+        if: steps.creds.outputs.available == 'true'
         uses: ./
         with:
           steam-username: ${{ secrets.STEAM_USERNAME }}
@@ -29,6 +44,7 @@ jobs:
           branch: public
 
       - name: Display Results
+        if: steps.creds.outputs.available == 'true'
         env:
           VERSION: ${{ steps.download.outputs.version }}
           BUILD_ID: ${{ steps.download.outputs.build-id }}
