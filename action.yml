@@ -50,10 +50,10 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup .NET 10
+    - name: Setup .NET 11
       uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
       with:
-        dotnet-version: "10.0.x"
+        dotnet-version: "11.0.x"
 
     - uses: hazre/setup-depotdownloader@32fd8308832d36bc762afcb4882111e5f740d8fd # v1.0.0
       with:
@@ -66,6 +66,9 @@ runs:
     - name: Resolve version for cache key
       id: resolve-version
       shell: bash
+      # hazre.ResoniteDownloader ships as a net10.0 tool, so let it run on the .NET 11 runtime.
+      env:
+        DOTNET_ROLL_FORWARD: Major
       run: |
         ARGS="--branch ${{ inputs.branch }}"
 
@@ -102,6 +105,8 @@ runs:
       id: download
       if: steps.cache-resonite.outputs.cache-hit != 'true'
       shell: bash
+      env:
+        DOTNET_ROLL_FORWARD: Major
       run: |
         ARGS="--game-dir ${{ inputs.resonite-path }} --steam-user ${{ inputs.steam-username }} --steam-pass ${{ inputs.steam-password }} --branch ${{ inputs.branch }}"
 
